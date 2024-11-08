@@ -1,0 +1,146 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\geometry{a4paper, margin=1in}
+
+\title{FourGuys Proposal to Further Improve the Point-of-Sale System: Checkout}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Authors}
+
+\begin{itemize}
+    \item \textbf{Sven Veit} \\
+    Dept. of Economics, Kiel University of Applied Sciences, Kiel, Germany \\
+    \texttt{svenveit@hanyang.ac.kr}
+    
+    \item \textbf{Jiyong Lee} \\
+    Dept. of Educational Technology, Hanyang University, Seoul, South Korea \\
+    \texttt{jdragon2000@naver.com}
+    
+    \item \textbf{Zabolotniaia Anna} \\
+    Dept. of Business Administration, Hanyang University, Seoul, South Korea \\
+    \texttt{elijaltayer@gmail.com}
+    
+    \item \textbf{Aneesa Shaki} \\
+    Dept. of Engineering and Computer Science, University of New South Wales, Sydney, Australia \\
+    \texttt{a.shaki@student.unsw.edu.au}
+\end{itemize}
+
+\section*{Abstract}
+This document defines our proposal requirements and explains our motivations and ongoing roles throughout the initial development process of the project to fulfill client requirements with an application to improve the POS system.
+
+\section{Introduction}
+
+\subsection{Motivation}
+Amid the ongoing cost of living crisis and the rapid shift in consumer behavior, large retailers are increasingly focused on improving operational efficiency and cutting costs. Recent disruptions, including global supply chain issues and changing labor dynamics, have amplified the urgency for more innovative, cost-effective solutions in the retail industry. 
+
+By leveraging smartphones as mobile POS systems, we can reduce infrastructure costs, eliminate fixed kiosks, and decrease reliance on labor-intensive processes. This approach empowers consumers to scan and purchase items independently, delivering a seamless retail experience.
+
+\subsection{Problem Statement}
+The current economic situation has created the need to reduce costs in the retail sector. Key issues include:
+\begin{itemize}
+    \item \textbf{Long wait times and congestion}: Customers face long queues at checkout, especially during peak hours, leading to increased costs and reduced customer satisfaction.
+    \item \textbf{Increased costs}: Maintaining traditional POS systems incurs significant expenses.
+    \item \textbf{Lack of flexibility}: Fixed checkout counters limit adaptability to customer traffic flow.
+    \item \textbf{Limited customer experience}: Current systems do not provide enough control over the shopping process.
+\end{itemize}
+
+\section{Solution}
+Our proposal is to implement a mobile application functioning as a POS system in physical retail stores. This solution aims to:
+\begin{itemize}
+    \item Reduce congestion and wait times.
+    \item Lower infrastructure and labor costs.
+    \item Enhance customer control over their shopping experience.
+\end{itemize}
+
+\section{Role Assignments}
+\begin{tabular}{|l|l|p{10cm}|}
+\hline
+\textbf{Role} & \textbf{Name} & \textbf{Task Description} \\
+\hline
+Software Developer & Sven & Develop the fundamental backend systems to fulfill the functional requirements. \\
+Software Developer & Aneesa & Develop the fundamental backend systems to fulfill the functional requirements. \\
+Customer & Jiyong & Check the functions of the application and identify any issues. \\
+Graphics Designer & Anna & Construct a visual design for the user experience. \\
+\hline
+\end{tabular}
+
+\section{Requirements}
+\subsection{Barcode Scanning Feature}
+\begin{itemize}
+    \item \textbf{Barcode Scanning via Camera}: Users can scan product barcodes using their smartphone camera.
+    \item \textbf{QR Code Scanning Support}: Apply coupons or discounts via QR codes.
+\end{itemize}
+
+\subsection{Shopping Cart Feature}
+\begin{itemize}
+    \item Add, modify, or remove products.
+    \item View total payment amount in real-time.
+\end{itemize}
+
+\subsection{Payment Features}
+\begin{itemize}
+    \item Choose and manage payment methods.
+    \item Instant payment with a single click.
+    \item View payment history and receipts.
+\end{itemize}
+
+\subsection{Promotions and Coupon Management}
+\begin{itemize}
+    \item Register and apply discount codes automatically.
+    \item Reward programs applicable to purchases.
+\end{itemize}
+
+\subsection{Notifications}
+\begin{itemize}
+    \item Real-time notifications for promotions and payments.
+\end{itemize}
+
+\section{Development Environment}
+\subsection{Software Platform}
+A web application platform is suitable due to its accessibility, scalability, and cross-platform compatibility.
+
+\subsection{Coding Languages}
+JavaScript, TypeScript, HTML, and CSS frameworks will be used for development. Node.js and React Native are chosen for their extensive libraries.
+
+\subsection{Cost Estimation}
+\begin{tabular}{|l|l|p{8cm}|}
+\hline
+\textbf{Expense Attribute} & \textbf{Cost per Annum} & \textbf{Reasoning} \\
+\hline
+Web Hosting & \$1200-2400 & Platforms like AWS or Heroku. \\
+Database Hosting & \$240-600 & For storing data securely online. \\
+Outsourced API & \$600-1200 & For barcode scanning capabilities. \\
+Domain Name & \$0-20 & To secure a domain name. \\
+SSL & \$0-249 & For secure, encrypted connections. \\
+\hline
+\end{tabular}
+
+\section{Specifications}
+\subsection{Login Page}
+Users enter a username and password for secure access.
+
+\subsection{Register Page}
+Usernames must be 2-20 characters long; passwords must be 8-15 characters with a mix of letters and numbers.
+
+\subsection{User Information Page}
+Manage user information, payment methods, and purchase history.
+
+\subsection{Card Registration Page}
+Register multiple cards for instant payment.
+
+\subsection{Purchase History Page}
+View and manage previous purchases.
+
+\subsection{Barcode Scanning Page}
+Users scan barcodes to retrieve item information and proceed with payment.
+
+\end{document}
