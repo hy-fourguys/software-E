@@ -7,10 +7,10 @@ const port = 3000;
 
 // Database connection pool configuration
 const pool = new Pool({
-    user: 'postgres', // Replace with your actual PostgreSQL username
-    host: 'localhost', // Host of your database, typically 'localhost' for local development
-    database: 'barcode_scanner', // Replace with your actual database name
-    password: 'new_password', // Replace with your actual password
+    user: 'postgres',
+    host: 'localhost',
+    database: 'barcode_scanner',
+    password: 'new_password',
     port: 5432, // Default PostgreSQL port
 });
 
