@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Payment</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+</head>
+
+<body>
+
+    <header>
+        <h1>Complete Payment with Stripe</h1>
+    </header>
+
+    <main>
+        <button class="checkout-button" id="pay-now">Pay Now</button>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="icon" aria-label="Home">🏠</a>
+        <a href="barcode.html" class="icon" aria-label="Scanner">🔍</a>
+        <a href="receipts.html" class="icon" aria-label="Receipts">📄</a>
+        <a href="cart.html" class="icon" aria-label="Cart">📦</a>
+        <a href="account.html" class="icon" aria-label="Account">👤</a>
+    </footer>
+
+    <script>
+        document.getElementById("pay-now").addEventListener("click", async () => {
+            try {
+                // Retrieve user ID
+                const userId = localStorage.getItem("userId");
+                if (!userId) {
+                    alert("User not logged in. Please log in and try again.");
+                    return;
+                }
+
+                // Fetch cart data from backend
+                const response = await fetch(`http://localhost:5000/api/cart`, {
+                    method: "GET",
+                    headers: {
+                        "x-user-id": userId,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorMessage = await response.text();
+                    console.error("Error fetching cart from backend:", errorMessage);
+                    throw new Error("Failed to fetch cart data. Please refresh the page and try again.");
+                }
+
+                const cart = await response.json();
+
+                // Ensure cart is valid before proceeding
+                if (!Array.isArray(cart) || cart.length === 0) {
+                    alert("Cart is empty. Please add items to proceed.");
+                    return;
+                }
+
+                console.log("Sending cart data to backend for Stripe checkout:", cart);
+
+                // Step 1: Call backend to create a Stripe checkout session
+                const sessionResponse = await fetch("http://localhost:5000/api/stripe/create-checkout-session", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-user-id": userId,
+                    },
+                    body: JSON.stringify({ cart }),
+                });
+
+                if (!sessionResponse.ok) {
+                    const errorMessage = await sessionResponse.text();
+                    console.error("Error creating Stripe session:", errorMessage);
+                    throw new Error("Failed to create Stripe checkout session. Please try again.");
+                }
+
+                const { sessionId } = await sessionResponse.json();
+
+                // Step 2: Redirect to Stripe's hosted checkout page
+                const stripe = Stripe("pk_test_51QR9TSA9PYZCuSc2QuoA7tVlfNc6JBBd15hE9h8dJNeLMI4YT6iIJq8XkpSZpY5XsvUBpqM7JP864cjJFur8VUsG00vSEIQIcx");
+                const { error } = await stripe.redirectToCheckout({ sessionId });
+
+                if (error) {
+                    console.error("Stripe Checkout Error:", error);
+                    alert("An error occurred during payment. Please try again.");
+                }
+            } catch (err) {
+                console.error("Error initiating Stripe Checkout:", err);
+                alert(`Unable to proceed with Stripe payment. Please try again later.\nError: ${err.message}`);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

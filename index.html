@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header>
+        <h1>Home Page</h1>
+        <p id="user-info"></p>
+    </header>
+
+    <main>
+        <section id="shops" class="section">
+            <h2>Shops</h2>
+            <div class="shop-list" id="shop-list"></div>
+        </section>
+        <section id="bookmarks" class="section">
+            <h2>Bookmarks</h2>
+            <ul id="bookmark-list" class="bookmark-list"></ul>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="icon" aria-label="Home">🏠</a>
+        <a href="barcode.html" class="icon" aria-label="Scanner">🔍</a>
+        <a href="receipts.html" class="icon" aria-label="Receipts">📄</a>
+        <a href="cart.html" class="icon" aria-label="Cart">📦</a>
+        <a href="account.html" class="icon" aria-label="Account">👤</a>
+    </footer>
+
+    <script>
+        const userInfoElement = document.getElementById("user-info");
+
+        function handleLoginRedirect() {
+            const urlParams = new URLSearchParams(window.location.hash.substring(1));
+            const idToken = urlParams.get("id_token");
+
+            if (idToken) {
+                localStorage.setItem("id_token", idToken);
+                const payload = JSON.parse(atob(idToken.split(".")[1]));
+                console.log("User logged in as:", payload);
+                localStorage.setItem("userId", payload.sub);
+                userInfoElement.textContent = `Welcome, ${payload.name || payload.preferred_username}`;
+                window.location.hash = "";
+            } else {
+                console.log("No ID token found in URL.");
+            }
+        }
+
+        function loadUserInfo() {
+            const idToken = localStorage.getItem("id_token");
+            if (!idToken) {
+                userInfoElement.textContent = "Not logged in.";
+                return null;
+            }
+
+            const payload = JSON.parse(atob(idToken.split(".")[1]));
+            userInfoElement.textContent = `Welcome, ${payload.name || payload.preferred_username}`;
+            return payload;
+        }
+
+        const shops = [
+            "Hanaro Mart",
+            "CU",
+            "GS25",
+            "7-Eleven",
+            "Emart24",
+            "Lotte Super",
+            "E-Mart",
+            "Homeplus",
+            "Lotte Mart",
+        ];
+
+        function loadShops() {
+            const shopList = document.getElementById("shop-list");
+            const selectedShop = localStorage.getItem("selectedShop") || "Hanaro Mart";
+
+            shopList.innerHTML = shops
+                .map(shop => `
+                    <button class="shop-card ${shop === selectedShop ? "active" : ""}" onclick="selectShop(this, '${shop}')">
+                        ${shop}
+                    </button>
+                `)
+                .join("");
+        }
+
+        async function clearCart() {
+            try {
+                const userId = localStorage.getItem("userId");
+                if (!userId) {
+                    throw new Error("User not logged in.");
+                }
+
+                const response = await fetch("http://localhost:5000/api/cart", {
+                    method: "DELETE",
+                    headers: { "x-user-id": userId },
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(errorDetails.message || "Failed to clear cart.");
+                }
+
+                console.log("Cart cleared successfully.");
+            } catch (error) {
+                console.error("Error clearing cart:", error);
+            }
+        }
+
+        function selectShop(button, shopName) {
+            const previousShop = localStorage.getItem("selectedShop");
+            if (previousShop && previousShop !== shopName) {
+                clearCart();
+            }
+
+            localStorage.setItem("selectedShop", shopName);
+            const shopButtons = document.querySelectorAll(".shop-card");
+            shopButtons.forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+        }
+
+        async function loadBookmarks() {
+            const bookmarkList = document.getElementById("bookmark-list");
+            const userId = localStorage.getItem("userId");
+
+            if (!userId) {
+                alert("User not logged in.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:5000/api/bookmarks", {
+                    method: "GET",
+                    headers: { "x-user-id": userId },
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    console.error("Error loading bookmarks:", errorDetails);
+                    throw new Error(errorDetails.message || "Failed to load bookmarks.");
+                }
+
+                const bookmarks = await response.json();
+
+                if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
+                    bookmarkList.innerHTML = "<li class='bookmark-message'>No bookmarks found.</li>";
+                    return;
+                }
+
+                bookmarkList.innerHTML = bookmarks
+                    .map(bookmark => `
+                        <li class="bookmark-item">
+                            <div class="bookmark-details">
+                                <span>${bookmark.product_name}</span>
+                                <span>$${parseFloat(bookmark.price).toFixed(2)}</span>
+                            </div>
+                            <span class="cart-remove" onclick="removeBookmark('${bookmark.product_id}')">Remove</span>
+                        </li>
+                    `).join("");
+            } catch (error) {
+                console.error("Error loading bookmarks:", error);
+                bookmarkList.innerHTML = "<li class='bookmark-message'>No bookmarks available.</li>";
+            }
+        }
+
+        async function removeBookmark(productId) {
+            const userId = localStorage.getItem("userId");
+
+            if (!userId) {
+                console.error("User not logged in.");
+                alert("Please log in to remove bookmarks.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/bookmarks/${productId}`, {
+                    method: "DELETE",
+                    headers: { "x-user-id": userId },
+                });
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    throw new Error(errorDetails.message || "Failed to remove bookmark");
+                }
+
+                console.log(`Bookmark for product ${productId} removed successfully.`);
+                loadBookmarks();
+            } catch (error) {
+                console.error(`Error removing bookmark for product ${productId}:`, error);
+                alert("Failed to remove bookmark. Please try again.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            handleLoginRedirect();
+            const user = loadUserInfo();
+            if (user) {
+                loadShops();
+                loadBookmarks();
+            }
+        });
+    </script>
+</body>
+
+</html>
