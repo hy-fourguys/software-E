@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+</head>
+
+<body id="barcode-page">
+
+    <header>
+        <h1>Barcode Scanner</h1>
+    </header>
+
+    <main id="barcode-main">
+        <div id="scanner-container"></div>
+        <p id="output">Initializing scanner...</p>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="icon" aria-label="Home">🏠</a>
+        <a href="barcode.html" class="icon" aria-label="Scanner">🔍</a>
+        <a href="receipts.html" class="icon" aria-label="Receipts">📄</a>
+        <a href="cart.html" class="icon" aria-label="Cart">📦</a>
+        <a href="account.html" class="icon" aria-label="Account">👤</a>
+    </footer>
+
+    <script>
+        async function fetchProductDetails(barcode) {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                console.error("User ID is missing. Cannot fetch product details.");
+                throw new Error("User ID not found. Please log in again.");
+            }
+
+            console.log("Fetching details for barcode:", barcode);
+
+            const response = await fetch(`http://localhost:5000/api/products/${barcode}`, {
+                method: "GET",
+                headers: {
+                    "x-user-id": userId,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Failed to fetch product details: ${errorText}`);
+                throw new Error("Product not found");
+            }
+
+            const product = await response.json();
+            console.log("Product fetched successfully:", product);
+            return product;
+        }
+
+        async function addToCart(product) {
+            const userId = localStorage.getItem("userId"); 
+            if (!userId) {
+                console.error("User ID is missing. Cannot add to cart.");
+                throw new Error("User ID not found. Please log in again.");
+            }
+
+            console.log("Adding product to cart:", product);
+
+            const { product_id, product_name, price } = product;
+            const shop_name = localStorage.getItem("selectedShop");
+
+            if (!product_id || !product_name || typeof price === "undefined" || !shop_name) {
+                console.error("Invalid product data or shop not selected:", { product, shop_name });
+                throw new Error("Product data is incomplete or shop not selected");
+            }
+
+            const response = await fetch("http://localhost:5000/api/cart", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "x-user-id": userId, 
+                },
+                body: JSON.stringify({ product_id, product_name, price: parseFloat(price), shop_name }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`Failed to add product to cart: ${errorText}`);
+                throw new Error("Failed to add product to cart");
+            }
+
+            console.log("Product added to cart successfully");
+        }
+
+        function initializeBarcodeScanner() {
+            const outputElement = document.getElementById("output");
+            const scannerContainer = document.getElementById("scanner-container");
+            const scannedBarcodes = new Set();
+
+            Quagga.init(
+                {
+                    inputStream: {
+                        name: "Live",
+                        type: "LiveStream",
+                        target: scannerContainer,
+                        constraints: {
+                            width: 480,
+                            height: 360,
+                            facingMode: "environment", 
+                        },
+                    },
+                    decoder: {
+                        readers: ["ean_reader", "code_128_reader"],
+                    },
+                },
+                (err) => {
+                    if (err) {
+                        console.error("Error initializing Quagga:", err);
+                        outputElement.textContent = `Error initializing scanner: ${err.message}`;
+                        return;
+                    }
+                    console.log("Quagga initialized successfully.");
+                    Quagga.start();
+                }
+            );
+
+            Quagga.onDetected(async (data) => {
+                const barcode = data.codeResult.code;
+                if (scannedBarcodes.has(barcode)) return;
+                scannedBarcodes.add(barcode);
+
+                outputElement.textContent = `Detected barcode: ${barcode}`;
+                console.log("Barcode detected:", barcode);
+
+                try {
+                    const product = await fetchProductDetails(barcode);
+                    await addToCart(product);
+                    outputElement.textContent = `Added to cart: ${product.product_name}`;
+                } catch (error) {
+                    console.error("Error processing barcode:", error);
+                    outputElement.textContent = `Error: ${error.message}`;
+                }
+
+                setTimeout(() => scannedBarcodes.delete(barcode), 5000); 
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initializeBarcodeScanner();
+        });
+    </script>
+
+</body>
+
+</html>

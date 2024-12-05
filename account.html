@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Settings</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Account Settings</h1>
+    </header>
+
+    <main>
+        <section class="section">
+            <h2>User Profile</h2>
+            <p><strong>Display Name:</strong> <span id="display-name">Loading...</span></p>
+            <p><strong>First Name:</strong> <span id="first-name">Loading...</span></p>
+            <p><strong>Last Name:</strong> <span id="last-name">Loading...</span></p>
+        </section>
+        <section class="section">
+            <h2>Actions</h2>
+            <!-- Edit Profile Button -->
+            <a href="https://checkout24.b2clogin.com/checkout24.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_profileediting1&client_id=53a0a53b-9304-4fdb-a3cd-5a45f1da414e&nonce=defaultNonce&redirect_uri=http%3A%2F%2Flocalhost%3A5000%2Findex.html&scope=openid&response_type=id_token&prompt=login" 
+               class="action-button">Edit Profile</a>
+            <!-- Logout Button -->
+            <button class="logout-button action-button" id="logout-button">Logout</button>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="icon" aria-label="Home">🏠</a>
+        <a href="barcode.html" class="icon" aria-label="Scanner">🔍</a>
+        <a href="receipts.html" class="icon" aria-label="Receipts">📄</a>
+        <a href="cart.html" class="icon" aria-label="Cart">📦</a>
+        <a href="account.html" class="icon" aria-label="Account">👤</a>
+    </footer>
+
+    <script>
+        // Function to decode the ID token
+        function decodeIdToken(idToken) {
+            const payload = JSON.parse(atob(idToken.split(".")[1]));
+            return payload;
+        }
+
+        // Function to load user attributes
+        function loadUserAttributes() {
+            const idToken = localStorage.getItem("id_token");
+
+            if (!idToken) {
+                console.error("No ID token found.");
+                document.getElementById("display-name").textContent = "Not logged in.";
+                return;
+            }
+
+            try {
+                const userInfo = decodeIdToken(idToken);
+
+                // Display user attributes
+                document.getElementById("display-name").textContent = userInfo.name || "N/A";
+                document.getElementById("first-name").textContent = userInfo.given_name || "N/A";
+                document.getElementById("last-name").textContent = userInfo.family_name || "N/A";
+
+                console.log("User attributes loaded:", userInfo);
+            } catch (error) {
+                console.error("Error decoding ID token:", error);
+            }
+        }
+
+        // Call the function on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            loadUserAttributes();
+
+            // Logout functionality
+            document.getElementById("logout-button").addEventListener("click", () => {
+                const logoutUrl = "https://checkout24.b2clogin.com/checkout24.onmicrosoft.com/oauth2/v2.0/logout?p=B2C_1_signupsignin1&post_logout_redirect_uri=http://localhost:5000/auth.html";
+                window.location.href = logoutUrl;
+            });
+        });
+    </script>
+</body>
+
+</html>

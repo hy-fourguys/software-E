@@ -1,0 +1,27 @@
+{
+  "name": "project-30.11",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@azure/msal-browser": "^3.27.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
+    "bwip-js": "^4.5.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.1",
+    "mssql": "^11.0.1",
+    "pg": "^8.13.1",
+    "stripe": "^17.4.0"
+  },
+  "devDependencies": {
+    "webpack": "^5.97.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

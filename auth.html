@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="custom-header">
+        <h1 style="display: inline;">Welcome to Checkout</h1>
+        <a href="https://checkout24.b2clogin.com/checkout24.onmicrosoft.com/oauth2/v2.0/authorize?p=B2C_1_signupsignin1&client_id=53a0a53b-9304-4fdb-a3cd-5a45f1da414e&nonce=defaultNonce&redirect_uri=http://localhost:5000/index.html&scope=openid&response_type=id_token"
+            class="login-button">Login / Register</a>
+    </header>
+
+    <main>
+    </main>
+
+    <footer>
+    </footer>
+
+    <script>
+        // Extract the ID token from the URL fragment
+        const urlParams = new URLSearchParams(window.location.hash.substring(1));
+        const idToken = urlParams.get("id_token");
+
+        if (idToken) {
+            console.log("ID Token received:", idToken);
+
+            // Decode the ID token for user info (optional)
+            const payload = JSON.parse(atob(idToken.split(".")[1]));
+            console.log("User info:", payload);
+
+            // Display user info
+            document.body.innerHTML = `
+                <header>
+                    <h1>Welcome, ${payload.name || payload.preferred_username}</h1>
+                </header>
+                <main>
+                    <p>Email: ${payload.email || "N/A"}</p>
+                    <p>ID Token: <small>${idToken}</small></p>
+                </main>
+            `;
+        } else {
+            console.log("No ID token found. User might not be logged in.");
+        }
+    </script>
+</body>
+
+</html>

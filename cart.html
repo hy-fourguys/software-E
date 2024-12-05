@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <header>
+        <h1>Your Cart</h1>
+    </header>
+
+    <main>
+        <ul id="cart-list" class="cart-list"></ul>
+        <p id="cart-total"><strong>Total: </strong>$0.00</p>
+        <button id="checkout-button" class="checkout-button" disabled>Checkout</button>
+    </main>
+
+    <footer class="footer">
+        <a href="index.html" class="icon" aria-label="Home">🏠</a>
+        <a href="barcode.html" class="icon" aria-label="Scanner">🔍</a>
+        <a href="receipts.html" class="icon" aria-label="Receipts">📄</a>
+        <a href="cart.html" class="icon" aria-label="Cart">📦</a>
+        <a href="account.html" class="icon" aria-label="Account">👤</a>
+    </footer>
+
+    <script>
+        async function loadCart() {
+            const cartList = document.getElementById("cart-list");
+            const cartTotal = document.getElementById("cart-total");
+            const checkoutButton = document.getElementById("checkout-button");
+
+            const userId = localStorage.getItem("userId"); // Retrieve user ID
+            if (!userId) {
+                alert("User not logged in.");
+                return;
+            }
+
+            cartList.innerHTML = "<p>Loading...</p>";
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/cart`, {
+                    method: "GET",
+                    headers: {
+                        "x-user-id": userId, // Pass user ID in the headers
+                    },
+                });
+
+                if (!response.ok) throw new Error("Failed to fetch cart data");
+
+                const cart = await response.json();
+                console.log("Cart data:", cart);
+
+                if (!Array.isArray(cart) || cart.length === 0) {
+                    cartList.innerHTML = "<p>Your cart is currently empty.</p>";
+                    cartTotal.innerHTML = `<strong>Total: </strong>$0.00`;
+                    checkoutButton.disabled = true;
+                    return;
+                }
+
+                cartList.innerHTML = cart
+                    .map((item) => `
+                        <li class="cart-item" data-product-id="${item.product_id}">
+                            <div class="product-details">
+                                <span class="cart-product-name">${item.product_name}</span>
+                                <span class="cart-product-price">Unit Price: $${parseFloat(item.price).toFixed(2)}</span>
+                            </div>
+                            <div class="product-summary">
+                                <span class="cart-product-quantity">Quantity: ${item.quantity}</span>
+                                <span class="cart-product-total">Total: $${(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                            <div class="cart-quantity">
+                                <button onclick="updateQuantity('${item.product_id}', parseInt(this.nextElementSibling.textContent) - 1)">-</button>
+                                <span>${item.quantity}</span>
+                                <button onclick="updateQuantity('${item.product_id}', parseInt(this.previousElementSibling.textContent) + 1)">+</button>
+                            </div>
+                            <div class="cart-actions">
+                                <span class="bookmark-star" 
+                                    data-bookmarked="${item.bookmarked}" 
+                                    onclick="toggleBookmark('${item.product_id}', this)">
+                                    &#9733;
+                                </span>
+                                <span class="cart-remove" onclick="removeProduct('${item.product_id}')">Remove</span>
+                            </div>
+                        </li>
+                    `).join("");
+
+                const total = cart.reduce((sum, item) => sum + parseFloat(item.price) * item.quantity, 0);
+                cartTotal.innerHTML = `<strong>Total: </strong>$${total.toFixed(2)}`;
+                checkoutButton.disabled = false;
+
+                checkoutButton.onclick = () => {
+                    localStorage.setItem("cart", JSON.stringify(cart));
+                    window.location.href = "stripe.html";
+                };
+            } catch (error) {
+                console.error("Error loading cart:", error);
+                cartList.innerHTML = "<p>Failed to load cart. Please try again later.</p>";
+                cartTotal.innerHTML = `<strong>Total: </strong>$0.00`;
+                checkoutButton.disabled = true;
+            }
+        }
+
+        async function updateQuantity(productId, quantity) {
+            if (quantity < 1) return; // Prevent invalid quantities
+
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                alert("User not logged in.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-user-id": userId,
+                    },
+                    body: JSON.stringify({ quantity }),
+                });
+
+                if (!response.ok) throw new Error("Failed to update quantity.");
+
+                const updatedProduct = await response.json();
+                if (!updatedProduct || typeof updatedProduct.total === "undefined") {
+                    throw new Error("Unexpected response from server.");
+                }
+
+                // Update the DOM for the specific product
+                const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+                if (cartItem) {
+                    cartItem.querySelector(".cart-quantity span").textContent = updatedProduct.quantity;
+                    cartItem.querySelector(".cart-product-total").textContent = `Total: $${updatedProduct.total.toFixed(2)}`;
+                    cartItem.querySelector(".cart-product-quantity").textContent = `Quantity: ${updatedProduct.quantity}`;
+                }
+
+                recalculateCartTotal();
+            } catch (error) {
+                console.error("Error updating quantity:", error);
+                alert("Failed to update quantity. Please try again.");
+            }
+        }
+
+        function recalculateCartTotal() {
+            const cartItems = document.querySelectorAll(".cart-item");
+            let total = 0;
+
+            cartItems.forEach((item) => {
+                const quantity = parseInt(item.querySelector(".cart-quantity span").textContent);
+                const unitPrice = parseFloat(item.querySelector(".cart-product-price").textContent.split("$")[1]);
+                total += quantity * unitPrice;
+            });
+
+            const cartTotal = document.getElementById("cart-total");
+            cartTotal.innerHTML = `<strong>Total: </strong>$${total.toFixed(2)}`;
+        }
+
+        async function removeProduct(productId) {
+            const userId = localStorage.getItem("userId");
+            if (!userId) {
+                alert("User not logged in.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/cart/${productId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "x-user-id": userId,
+                    },
+                });
+
+                if (!response.ok) throw new Error("Failed to remove product.");
+
+                // Remove the product from the DOM
+                const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+                if (cartItem) {
+                    cartItem.remove();
+                }
+
+                recalculateCartTotal();
+            } catch (error) {
+                console.error("Error removing product:", error);
+                alert("Failed to remove product. Please try again.");
+            }
+        }
+
+        async function toggleBookmark(productId, element) {
+            const isBookmarked = element.getAttribute("data-bookmarked") === "true";
+            const userId = localStorage.getItem("userId");
+
+            if (!userId) {
+                console.error("User ID is missing.");
+                alert("Please log in again.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/bookmarks/${productId}`, {
+                    method: isBookmarked ? "DELETE" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "x-user-id": userId,
+                    },
+                });
+
+                if (response.status === 409) {
+                    console.warn("Product is already bookmarked.");
+                    alert("This product is already bookmarked.");
+                    return;
+                }
+
+                if (!response.ok) {
+                    const errorDetails = await response.json();
+                    console.error("Server response:", errorDetails);
+                    throw new Error(errorDetails.message || "Failed to update bookmark");
+                }
+
+                element.setAttribute("data-bookmarked", !isBookmarked);
+                element.style.color = !isBookmarked ? "gold" : "grey";
+            } catch (error) {
+                console.error("Error toggling bookmark:", error.message);
+                alert("Failed to toggle bookmark. Please try again.");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadCart();
+        });
+    </script>
+
+</body>
+
+</html>
