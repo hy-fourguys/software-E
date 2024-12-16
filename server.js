@@ -22,9 +22,6 @@ const pool = new Pool({
     port: 5432,
 });
 
-// Middleware to parse JSON (if not already added)
-app.use(express.json());
-
 // Middleware to extract and validate userId
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
@@ -148,8 +145,6 @@ app.put("/api/cart/:productId", async (req, res) => {
         res.status(500).json({ message: "Server error", error: err.message });
     }
 });
-
-
 
 // API endpoint to remove a specific product from the cart
 app.delete("/api/cart/:productId", async (req, res) => {
@@ -287,7 +282,6 @@ app.delete("/api/bookmarks/:productId", async (req, res) => {
     }
 });
 
-
 // Get Bookmarks
 app.get("/api/bookmarks", async (req, res) => {
     const userId = req.userId;
@@ -386,7 +380,6 @@ app.post("/api/stripe/create-checkout-session", async (req, res) => {
     }
 });
 
-
 // API to handle successful payments and generate a receipt
 app.post("/api/stripe/payment-success", async (req, res) => {
     const userId = req.userId; // Extract userId from middleware
@@ -430,7 +423,6 @@ app.post("/api/stripe/payment-success", async (req, res) => {
         res.status(500).json({ message: "Failed to process payment and generate receipt.", error: err.message });
     }
 });
-
 
 // API to retrieve all receipts
 app.get("/api/receipts", async (req, res) => {
