@@ -40,7 +40,6 @@
     </footer>
 
     <script>
-        // Function to decode the ID token
         function decodeIdToken(idToken) {
             const payload = JSON.parse(atob(idToken.split(".")[1]));
             return payload;
