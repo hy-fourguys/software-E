@@ -29,7 +29,6 @@
         if (idToken) {
             console.log("ID Token received:", idToken);
 
-            // Decode the ID token for user info (optional)
             const payload = JSON.parse(atob(idToken.split(".")[1]));
             console.log("User info:", payload);
 
