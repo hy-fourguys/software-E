@@ -168,7 +168,6 @@ app.delete("/api/cart/:productId", async (req, res) => {
     }
 });
 
-
 // API endpoint to clear the cart (checkout)
 app.post("/api/cart/checkout", async (req, res) => {
     try {
@@ -231,7 +230,6 @@ app.delete("/api/cart", async (req, res) => {
 });
 
 // API endpoint to add a product to bookmarks
-// POST /api/bookmarks/:productId
 app.post("/api/bookmarks/:productId", async (req, res) => {
     const userId = req.userId; // Extracted from middleware
     const { productId } = req.params;
